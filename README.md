@@ -31,52 +31,97 @@ RAM: 16.00 GB
 --------------------------
 
 Starting Fibonacci benchmark on 8 worker threads for 30 seconds...
+Number of runs: 1
 
-Benchmark finished after approximately 30005.63 ms.
+🔄 Starting run 1/1...
+✅ Run 1 completed:
+   • OVERALL Score: 2,507,948
+   
+   • Calculations: 163,873
+   • Duration: 30008.76 ms
+   • Peak Memory: 356.83 MB
 
-🏆 OVERALL SCORE: 5,672
-📊 Performance Metrics:
-   • Calculations/sec: 5,672
-   • Core efficiency: 100%
-   • Memory efficiency: 449 calc/MB
-📈 Results:
-Total Fibonacci calculations across 8 cores: 170,179
-Average calculations per core: 21,272
-Peak memory usage: 379.48 MB RSS, 4.69 MB heap
-Final memory usage: 376.47 MB RSS, 4.55 MB heap
+🏆 BENCHMARK COMPLETED
+📊 Aggregated Results:
+   • Total Runs: 1
+   • Completed Runs: 1
+   • Total Duration: 30.05 seconds
+   • Total Calculations: 163,873
+   • Average Score: 2,507,948
+   • Best Score: 2,507,948
+   • Worst Score: 2,507,948
+   • Score Variance: 0
 
---- Benchmark Results ---
+--- Complete Benchmark Results ---
 {
-  "hostname": "RQCTQV92Y5",
-  "cpuModel": "Apple M1 Pro",
-  "cpuCores": 8,
-  "totalRAM": "16.00 GB",
-  "benchmarkDurationMs": 30000,
-  "actualDurationMs": 30005.63,
-  "totalFibonacciIndex": 170179,
-  "averageFibonacciIndexPerCore": 21272,
-  "performanceMetrics": {
-    "calculationsPerSecond": 5672,
-    "coreEfficiency": 100,
-    "memoryEfficiency": 449,
-    "overallScore": 5672
+  "benchmarkInfo": {
+    "totalRuns": 1,
+    "completedRuns": 1,
+    "totalDurationMs": 30049.64,
+    "startTime": "2025-07-17T10:07:44.183Z",
+    "endTime": "2025-07-17T10:08:14.233Z"
   },
-  "memoryUsage": {
-    "peak": {
-      "rss": "379.48 MB",
-      "heapUsed": "4.69 MB",
-      "heapTotal": "9.33 MB",
-      "external": "438.26 KB",
-      "arrayBuffers": "16.34 KB"
-    },
-    "final": {
-      "rss": "376.47 MB",
-      "heapUsed": "4.55 MB",
-      "heapTotal": "9.33 MB",
-      "external": "438.26 KB",
-      "arrayBuffers": "16.34 KB"
+  "systemInfo": {
+    "hostname": "RQCTQV92Y5",
+    "cpuModel": "Apple M1 Pro",
+    "cpuCores": 8,
+    "totalRAM": "16.00 GB"
+  },
+  "configuration": {
+    "benchmarkDurationMs": 30000,
+    "maxRamMB": null,
+    "outputFile": null,
+    "postUrl": null
+  },
+  "aggregatedResults": {
+    "totalCalculations": 163873,
+    "averageCalculationsPerRun": 163873,
+    "averageScore": 2507948,
+    "bestScore": 2507948,
+    "worstScore": 2507948,
+    "scoreVariance": 0
+  },
+  "individualRuns": [
+    {
+      "runNumber": 1,
+      "timestamp": "2025-07-17T10:08:14.192Z",
+      "hostname": "POOPIE_MACHINE",
+      "cpuModel": "Apple M1 Pro",
+      "cpuCores": 8,
+      "totalRAM": "16.00 GB",
+      "configuration": {
+        "benchmarkDurationMs": 30000,
+        "maxRamMB": null,
+        "actualDurationMs": 30008.76
+      },
+      "totalFibonacciIndex": 163873,
+      "averageFibonacciIndexPerCore": 20484,
+      "lastFibonacciNumber": "<the big number is rendered here>",
+      "activeWorkersAtEnd": 8,
+      "performanceMetrics": {
+        "calculationsPerSecond": 5461,
+        "coreEfficiency": 100,
+        "memoryEfficiency": 459247,
+        "overallScore": 2507948
+      },
+      "memoryUsage": {
+        "peak": {
+          "rss": "356.83 MB",
+          "heapUsed": "5.69 MB",
+          "heapTotal": "7.58 MB",
+          "external": "689.92 KB",
+          "arrayBuffers": "16.34 KB"
+        },
+        "final": {
+          "rss": "350.06 MB",
+          "heapUsed": "5.63 MB",
+          "heapTotal": "7.58 MB",
+          "external": "689.92 KB",
+          "arrayBuffers": "16.34 KB"
+        }
+      }
     }
-  }
+  ]
 }
 ```
 
