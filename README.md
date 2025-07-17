@@ -89,7 +89,24 @@ Final memory usage: 376.47 MB RSS, 4.55 MB heap
 - **Module Format**: ES Modules (ESM) - compatible with all modern runtimes
 - Dedicated server environment (minimal background processes)
 
-### Installation & Usage
+### Quick Installation
+
+#### Unix/Linux/macOS
+```bash
+curl -fsSL https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/install.sh | bash
+```
+
+#### Windows PowerShell
+```powershell
+irm https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/install.ps1 | iex
+```
+
+After installation, you can run:
+```bash
+fibonacci-benchmark --help
+```
+
+### Manual Installation & Usage
 
 #### Node.js
 ```bash
