@@ -1,0 +1,27 @@
+{
+  "name": "fibonacci-benchmark",
+  "version": "1.0.0",
+  "description": "Multi-core Fibonacci benchmark for Node.js, Deno, and Bun",
+  "type": "module",
+  "main": "benchmark.js",
+  "scripts": {
+    "start": "node benchmark.js",
+    "benchmark": "node benchmark.js",
+    "test": "node benchmark.js -d 5 -n 2"
+  },
+  "keywords": [
+    "benchmark",
+    "fibonacci",
+    "performance",
+    "multi-core",
+    "cpu",
+    "nodejs",
+    "deno",
+    "bun"
+  ],
+  "author": "Flavius Astalus",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

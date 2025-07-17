@@ -1,0 +1,7 @@
+{
+  "duration": 10,
+  "maxRamMB": 1024,
+  "outputFile": "benchmark-results.json",
+  "runs": 1,
+  "postUrl": "https://api.example.com/benchmark-results"
+} 
