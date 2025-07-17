@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node benchmark.js",
     "benchmark": "node benchmark.js",
-    "test": "node benchmark.js -d 5 -n 2"
+    "test": "node benchmark.js -d 5 -n 2",
+    "test-suite": "node test.js"
   },
   "keywords": [
     "benchmark",
@@ -22,6 +23,6 @@
   "author": "Flavius Astalus",
   "license": "MIT",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=10.5.0"
   }
 } 

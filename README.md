@@ -26,6 +26,7 @@ A high-performance CPU benchmark tool designed for dedicated server environments
 ```
 --- System Information ---
 Hostname: POOPIE_MACHINE
+IP Addresses: 192.168.1.100, 10.0.0.50
 CPU: Apple M1 Pro (8 cores)
 RAM: 16.00 GB
 --------------------------
@@ -62,7 +63,7 @@ Number of runs: 1
     "endTime": "2025-07-17T10:08:14.233Z"
   },
   "systemInfo": {
-    "hostname": "RQCTQV92Y5",
+    "hostname": "POOPIE_MACHINE",
     "cpuModel": "Apple M1 Pro",
     "cpuCores": 8,
     "totalRAM": "16.00 GB"
@@ -129,10 +130,23 @@ Number of runs: 1
 
 ### Prerequisites
 
-- **Node.js** (v14 or higher recommended), **Deno** (v1.20+), or **Bun** (v0.5+)
-- **Tested with**: Bun 1.2.18 ✅, Deno 2.4.2 ✅
+- **Node.js** (v10.5.0 or higher) - Worker threads support required
+- **Deno** (v1.20+ recommended) - Worker threads support required  
+- **Bun** (v0.5+ recommended) - Worker threads support required
+- **Tested with**: Bun 1.2.18 ✅, Deno 2.4.2 ✅, Node.js 18.16.0 ✅
 - **Module Format**: ES Modules (ESM) - compatible with all modern runtimes
+- **Critical Requirement**: Worker threads support is mandatory for multi-core functionality
 - Dedicated server environment (minimal background processes)
+
+#### Worker Threads Support Timeline
+
+| Runtime | Worker Threads Available | Minimum Version | Status |
+|---------|-------------------------|-----------------|---------|
+| **Node.js** | v10.5.0+ | v10.5.0 | ✅ Stable |
+| **Deno** | v1.20+ | v1.20 | ✅ Stable |
+| **Bun** | v0.5+ | v0.5 | ✅ Stable |
+
+**Note**: Worker threads are essential for the multi-core performance optimization. Without worker threads support, the benchmark will not function properly.
 
 ### Quick Installation
 
@@ -245,6 +259,10 @@ Create a `config.json` file for persistent settings:
 
 ## 🔄 Runtime Compatibility
 
+### ⚠️ Critical Requirement: Worker Threads Support
+
+**All supported runtimes must have worker threads support enabled.** This is a fundamental requirement for the multi-core performance optimization that makes this benchmark effective.
+
 ### Supported Runtimes
 
 This benchmark is designed to work across multiple JavaScript runtimes:
@@ -291,6 +309,80 @@ deno run --allow-read --allow-write --allow-net benchmark.js
 - **Bun**: Typically lowest memory footprint
 - **Node.js**: Moderate memory usage
 - **Deno**: Slightly higher memory usage due to security features
+
+## 📱 Android Compatibility
+
+### Termux Support
+
+This benchmark is fully compatible with Android devices running Termux, providing reliable performance measurements on mobile ARM architectures.
+
+#### Android-Specific Features
+
+- **ARM Architecture Detection**: Automatic detection of ARM/ARM64 processors
+- **CPU Core Fallback**: Robust fallback mechanisms when system information is limited
+- **Android Environment**: Optimized for Termux and Android development environments
+- **Memory Constraints**: Respects Android memory limitations and provides appropriate warnings
+
+#### Android Installation
+
+```bash
+# Install in Termux
+curl -fsSL https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/install.sh | bash
+
+# Or manual installation
+git clone https://github.com/m3nfis/fiboBenchmark_js-multi-runtime.git
+cd fiboBenchmark_js-multi-runtime
+node benchmark.js
+```
+
+#### Android Performance Considerations
+
+- **CPU Detection**: Uses multiple fallback methods to detect CPU cores on Android
+  - `nproc` command for available processing units
+  - `/proc/cpuinfo` reading for total processor count
+  - `/sys/devices/system/cpu/online` for online CPU cores
+  - Automatic fallback to reasonable defaults if detection fails
+- **Memory Management**: Optimized for Android's memory constraints
+- **Worker Threads**: Adapts to available CPU cores (typically 4-8 on modern devices)
+- **Performance**: Provides meaningful benchmarks even on mobile devices
+
+#### Sample Android Output
+
+```
+--- System Information ---
+Hostname: localhost
+IP Addresses: 192.168.1.150
+CPU: ARM ARM64 (8 cores)
+RAM: 5.51 GB
+--------------------------
+
+Starting Fibonacci benchmark on 8 worker threads for 30 seconds...
+Number of runs: 1
+
+🔄 Starting run 1/1...
+✅ Run 1 completed:
+   • OVERALL Score: 1,234,567
+   • Calculations: 45,678
+   • Duration: 30015.23 ms
+   • Peak Memory: 156.78 MB
+```
+
+#### Android Troubleshooting
+
+**CPU Detection Issues**
+- The benchmark automatically falls back to reasonable defaults if CPU detection fails
+- Uses `/proc/cpuinfo` reading on Linux/Android systems
+- Provides warnings when using fallback values
+
+**Memory Limitations**
+- Monitor memory usage on devices with limited RAM
+- Use `-r` flag to set memory limits if needed
+- Consider shorter benchmark durations on older devices
+
+**Performance Expectations**
+- Mobile devices typically show lower scores than desktop/server hardware
+- ARM processors may have different performance characteristics
+- Battery optimization may affect sustained performance
 
 ## 🏆 Performance Metrics Explained
 
@@ -458,6 +550,68 @@ Uses an iterative approach with BigInt for:
 - Verify Node.js worker thread support
 - Check for system resource limits
 - Ensure proper error handling in worker code
+
+**Worker Threads Not Available**
+- **Node.js**: Ensure version 10.5.0 or higher is installed
+- **Deno**: Ensure version 1.20 or higher is installed  
+- **Bun**: Ensure version 0.5 or higher is installed
+- **Check Version**: Run `node --version`, `deno --version`, or `bun --version`
+- **Alternative**: Use a runtime with worker threads support or upgrade your current runtime
+
+## 🧪 Testing
+
+### Test Suite
+
+A comprehensive test suite is included to verify all functionality:
+
+```bash
+# Run the test suite
+npm run test-suite
+
+# Or directly
+node test.js
+```
+
+### Test Coverage
+
+The test suite verifies:
+
+✅ **Command Line Options**
+- `-h, --help`: Help display
+- `-d, --duration`: Duration setting
+- `-r, --max-ram`: RAM limit setting
+- `-c, --config`: Config file loading
+- `-o, --output`: File output
+- `-n, --runs`: Multiple runs
+
+✅ **Functionality**
+- Default behavior
+- Combined options
+- Invalid option handling
+- Config file validation
+- Output file creation
+- JSON validation
+
+✅ **Error Handling**
+- Invalid config files
+- Missing files
+- Invalid arguments
+- Graceful degradation
+
+### Running Tests
+
+```bash
+# Quick test (5 seconds, 2 runs)
+npm test
+
+# Full test suite
+npm run test-suite
+
+# Individual test
+node test.js
+```
+
+The test suite provides colored output and detailed results for each test case.
 
 ## 📝 License
 

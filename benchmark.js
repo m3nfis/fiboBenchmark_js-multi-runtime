@@ -36,12 +36,12 @@ const __filename = fileURLToPath(import.meta.url);
 function parseArguments() {
     const args = process.argv.slice(2);
     const config = {
-        duration: 30, // Default 30 seconds
-        maxRamMB: null, // Default no limit
+        duration: undefined, // Don't set default here, let it be determined by config file or fallback
+        maxRamMB: undefined, // Don't set default here
         help: false,
         configFile: null,
         outputFile: null,
-        runs: 1 // Default single run
+        runs: undefined // Don't set default here
     };
 
     for (let i = 0; i < args.length; i++) {
@@ -73,7 +73,11 @@ function parseArguments() {
                 config.runs = value;
                 i++; // Skip next argument as it's the value
             }
+        } else if (arg.startsWith('-')) {
+            // Unknown option - print warning but continue
+            console.log(`Warning: Unknown option '${arg}' - ignoring`);
         }
+        // Ignore non-option arguments (they will be silently ignored)
     }
 
     return config;
@@ -96,7 +100,7 @@ function loadConfigFile(configPath) {
             };
         }
     } catch (error) {
-        console.warn(`Warning: Could not load config file '${configPath}': ${error.message}`);
+        console.log(`Warning: Could not load config file`);
     }
     return null;
 }
@@ -275,11 +279,123 @@ function getSystemInfo() {
     const totalMemoryBytes = os.totalmem();
     const totalMemoryGB = (totalMemoryBytes / (1024 * 1024 * 1024)).toFixed(2); // Convert bytes to GB
 
+    // Get network interfaces and extract IP addresses
+    const networkInterfaces = os.networkInterfaces();
+    const ipAddresses = [];
+    
+    for (const interfaceName in networkInterfaces) {
+        const interfaces = networkInterfaces[interfaceName];
+        for (const iface of interfaces) {
+            // Skip loopback addresses (127.x.x.x and ::1)
+            if (!iface.internal && iface.family === 'IPv4') {
+                ipAddresses.push(iface.address);
+            }
+        }
+    }
+
+    // Handle cases where CPU information is not available (e.g., Android/ARM)
+    let cpuModel = 'N/A';
+    let cpuCores = 1; // Default to 1 core if detection fails
+
+    if (cpus && cpus.length > 0) {
+        cpuModel = cpus[0].model || 'Unknown';
+        cpuCores = cpus.length;
+    } else {
+        // Fallback: try to detect CPU cores using other methods
+        try {
+            // Try to get CPU count from environment or system
+            const envCores = process.env.NODE_OPTIONS ? 
+                parseInt(process.env.NODE_OPTIONS.match(/--max-old-space-size=(\d+)/)?.[1] || '1') : 
+                null;
+            
+            if (envCores && envCores > 0) {
+                cpuCores = Math.min(envCores, 8); // Cap at 8 cores for safety
+            } else {
+                // Try to detect from os.availableParallelism() if available (Node.js 16+)
+                if (typeof os.availableParallelism === 'function') {
+                    cpuCores = os.availableParallelism();
+                } else {
+                    // Try multiple fallback methods for Linux/Android
+                    try {
+                        const fs = require('fs');
+                        const { execSync } = require('child_process');
+                        
+                        // Method 1: Try nproc command
+                        try {
+                            const nprocOutput = execSync('nproc', { encoding: 'utf8', timeout: 5000 });
+                            const nprocCores = parseInt(nprocOutput.trim());
+                            if (nprocCores && nprocCores > 0) {
+                                cpuCores = nprocCores;
+                            }
+                        } catch (e) {
+                            // nproc failed, try next method
+                        }
+                        
+                        // Method 2: Read /proc/cpuinfo and count processors
+                        if (cpuCores <= 1) {
+                            try {
+                                const cpuInfo = fs.readFileSync('/proc/cpuinfo', 'utf8');
+                                const processorMatches = cpuInfo.match(/processor\s*:\s*\d+/g);
+                                if (processorMatches) {
+                                    const detectedCores = processorMatches.length;
+                                    // Use the higher value between nproc and cpuinfo
+                                    cpuCores = Math.max(cpuCores, detectedCores);
+                                }
+                            } catch (e) {
+                                // cpuinfo reading failed
+                            }
+                        }
+                        
+                        // Method 3: Try /sys/devices/system/cpu/online
+                        if (cpuCores <= 1) {
+                            try {
+                                const onlineCpus = fs.readFileSync('/sys/devices/system/cpu/online', 'utf8').trim();
+                                // Parse ranges like "0-7" or "0,1,2,3,4,5,6,7"
+                                const ranges = onlineCpus.split(',');
+                                let totalCores = 0;
+                                for (const range of ranges) {
+                                    if (range.includes('-')) {
+                                        const [start, end] = range.split('-').map(Number);
+                                        totalCores += end - start + 1;
+                                    } else {
+                                        totalCores += 1;
+                                    }
+                                }
+                                if (totalCores > 0) {
+                                    cpuCores = totalCores;
+                                }
+                            } catch (e) {
+                                // online CPUs reading failed
+                            }
+                        }
+                        
+                    } catch (e) {
+                        // If all else fails, use a reasonable default
+                        cpuCores = 4; // Most modern devices have at least 4 cores
+                    }
+                }
+            }
+            
+            // Set a generic model name for ARM devices
+            if (process.arch === 'arm64' || process.arch === 'arm') {
+                cpuModel = `ARM ${process.arch.toUpperCase()}`;
+            } else {
+                cpuModel = `Unknown ${process.arch.toUpperCase()}`;
+            }
+        } catch (error) {
+            console.warn(`Warning: Could not detect CPU cores, using default: ${cpuCores}`);
+        }
+    }
+
+    // Ensure we have at least 1 core
+    cpuCores = Math.max(1, cpuCores);
+
     return {
         hostname: os.hostname(),
+        ipAddresses: ipAddresses.length > 0 ? ipAddresses : ['No external IP found'],
         cpu: {
-            model: cpus.length > 0 ? cpus[0].model : 'N/A', // Get model from the first CPU
-            cores: cpus.length
+            model: cpuModel,
+            cores: cpuCores
         },
         ram: `${totalMemoryGB} GB`
     };
@@ -308,10 +424,10 @@ if (isMainThread) {
     
     // Merge config: command line arguments override config file
     const finalConfig = {
-        duration: config.duration || (fileConfig ? fileConfig.duration : 30),
+        duration: config.duration !== undefined ? config.duration : (fileConfig ? fileConfig.duration : 30),
         maxRamMB: config.maxRamMB !== undefined ? config.maxRamMB : (fileConfig ? fileConfig.maxRamMB : null),
         outputFile: config.outputFile || (fileConfig ? fileConfig.outputFile : null),
-        runs: config.runs || (fileConfig ? fileConfig.runs : 1),
+        runs: config.runs !== undefined ? config.runs : (fileConfig ? fileConfig.runs : 1),
         postUrl: fileConfig ? fileConfig.postUrl : null
     };
     
@@ -322,13 +438,20 @@ if (isMainThread) {
     const systemInfo = getSystemInfo();
     const numCores = systemInfo.cpu.cores;
     
+    // Ensure we have at least 1 core for worker threads
+    if (numCores < 1) {
+        console.warn(`Warning: Detected ${numCores} CPU cores, using 1 core as fallback`);
+        systemInfo.cpu.cores = 1;
+    }
+    
     console.log(`\n--- System Information ---`);
     console.log(`Hostname: ${systemInfo.hostname}`);
+    console.log(`IP Addresses: ${systemInfo.ipAddresses.join(', ')}`);
     console.log(`CPU: ${systemInfo.cpu.model} (${systemInfo.cpu.cores} cores)`);
     console.log(`RAM: ${systemInfo.ram}`);
     console.log(`--------------------------\n`);
 
-    console.log(`Starting Fibonacci benchmark on ${numCores} worker threads for ${BENCHMARK_DURATION_MS / 1000} seconds...`);
+    console.log(`Starting Fibonacci benchmark on ${systemInfo.cpu.cores} worker threads for ${BENCHMARK_DURATION_MS / 1000} seconds...`);
     if (MAX_RAM_MB !== null) {
         console.log(`RAM limit: ${MAX_RAM_MB} MB (benchmark will stop if exceeded)`);
     }
@@ -347,7 +470,7 @@ if (isMainThread) {
             let workers = [];
             let totalFibIndex = 0;
             let maxFibNumber = 0n;
-            let activeWorkers = numCores;
+            let activeWorkers = systemInfo.cpu.cores;
             
             // Memory tracking
             let peakMemoryUsage = getMemoryUsage();
@@ -355,11 +478,11 @@ if (isMainThread) {
             let memoryCheckInterval;
 
             // Create workers for each CPU core
-            for (let i = 0; i < numCores; i++) {
+            for (let i = 0; i < systemInfo.cpu.cores; i++) {
                 const worker = new Worker(__filename, {
                     workerData: { 
                         workerId: i,
-                        totalWorkers: numCores
+                        totalWorkers: systemInfo.cpu.cores
                     }
                 });
 
@@ -422,23 +545,24 @@ if (isMainThread) {
                 const durationMs = Number(durationNs) / 1_000_000;
 
                 // Calculate average Fibonacci index per worker
-                const avgFibIndex = Math.floor(totalFibIndex / numCores);
+                const avgFibIndex = totalFibIndex > 0 ? Math.floor(totalFibIndex / systemInfo.cpu.cores) : 0;
 
                 // Get final memory usage
                 const finalMemoryUsage = getMemoryUsage();
 
                 // Calculate overall performance score
-                const calculationsPerSecond = Math.round(totalFibIndex / (durationMs / 1000));
-                const coreEfficiency = Math.round((totalFibIndex / numCores) / (totalFibIndex / numCores) * 100);
-                const memoryEfficiency = Math.round((totalFibIndex / parseFloat(peakMemoryUsage.rss.split(' ')[0])) * 1000);
+                const calculationsPerSecond = totalFibIndex > 0 ? Math.round(totalFibIndex / (durationMs / 1000)) : 0;
+                const coreEfficiency = totalFibIndex > 0 ? Math.round((totalFibIndex / systemInfo.cpu.cores) / (totalFibIndex / systemInfo.cpu.cores) * 100) : 0;
+                const memoryEfficiency = totalFibIndex > 0 ? Math.round((totalFibIndex / parseFloat(peakMemoryUsage.rss.split(' ')[0])) * 1000) : 0;
                 
-                const overallScore = Math.round(calculationsPerSecond * (coreEfficiency / 100) * (memoryEfficiency / 1000));
+                const overallScore = totalFibIndex > 0 ? Math.round(calculationsPerSecond * (coreEfficiency / 100) * (memoryEfficiency / 1000)) : 0;
 
                 // Create run result
                 const runResult = {
                     runNumber: runNumber,
                     timestamp: new Date().toISOString(),
                     hostname: systemInfo.hostname,
+                    ipAddresses: systemInfo.ipAddresses,
                     cpuModel: systemInfo.cpu.model,
                     cpuCores: systemInfo.cpu.cores,
                     totalRAM: systemInfo.ram,
@@ -497,9 +621,9 @@ if (isMainThread) {
         // Calculate aggregated results
         const totalDuration = Number(process.hrtime.bigint() - startTime) / 1_000_000;
         const totalCalculations = allRuns.reduce((sum, run) => sum + run.totalFibonacciIndex, 0);
-        const avgScore = Math.round(allRuns.reduce((sum, run) => sum + run.performanceMetrics.overallScore, 0) / allRuns.length);
-        const bestScore = Math.max(...allRuns.map(run => run.performanceMetrics.overallScore));
-        const worstScore = Math.min(...allRuns.map(run => run.performanceMetrics.overallScore));
+        const avgScore = allRuns.length > 0 ? Math.round(allRuns.reduce((sum, run) => sum + (run.performanceMetrics.overallScore || 0), 0) / allRuns.length) : 0;
+        const bestScore = allRuns.length > 0 ? Math.max(...allRuns.map(run => run.performanceMetrics.overallScore || 0)) : 0;
+        const worstScore = allRuns.length > 0 ? Math.min(...allRuns.map(run => run.performanceMetrics.overallScore || 0)) : 0;
 
         // Create comprehensive results object
         const results = {
@@ -512,6 +636,7 @@ if (isMainThread) {
             },
             systemInfo: {
                 hostname: systemInfo.hostname,
+                ipAddresses: systemInfo.ipAddresses,
                 cpuModel: systemInfo.cpu.model,
                 cpuCores: systemInfo.cpu.cores,
                 totalRAM: systemInfo.ram
