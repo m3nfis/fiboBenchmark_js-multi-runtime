@@ -43,6 +43,7 @@ BENCHMARK_URL="https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-r
 CONFIG_URL="https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/config.json"
 PACKAGE_URL="https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/package.json"
 README_URL="https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/README.md"
+COMPARE_URL="https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/compare-runtimes.sh"
 
 # Installation directory
 INSTALL_DIR=${FIBONACCI_BENCHMARK_INSTALL:-$HOME/.fibonacci-benchmark}
@@ -70,6 +71,10 @@ curl --fail --location --progress-bar --output "$BIN_DIR/package.json" "$PACKAGE
 
 # Download README.md
 curl --fail --location --progress-bar --output "$BIN_DIR/README.md" "$README_URL" || error "Failed to download README.md from \"$README_URL\""
+
+# Download compare-runtimes.sh
+curl --fail --location --progress-bar --output "$BIN_DIR/compare-runtimes.sh" "$COMPARE_URL" || error "Failed to download compare-runtimes.sh from \"$COMPARE_URL\""
+chmod +x "$BIN_DIR/compare-runtimes.sh" || error "Failed to set permissions on compare-runtimes.sh"
 
 # Create executable wrapper
 cat > "$EXE" << 'EOF'
@@ -143,10 +148,12 @@ tildify() {
 }
 
 success "Fibonacci Benchmark was installed successfully to $Bold_Green$(tildify "$EXE")"
+success "Runtime comparison tool installed to $Bold_Green$(tildify "$BIN_DIR/compare-runtimes.sh")"
 
 # Check if already in PATH
 if command -v fibonacci-benchmark >/dev/null; then
     echo "Run 'fibonacci-benchmark --help' to get started"
+    echo "Run 'compare-runtimes.sh --help' to compare Node.js, Deno, and Bun performance"
     exit 0
 fi
 
@@ -264,4 +271,5 @@ echo
 if [[ $refresh_command ]]; then
     info_bold " $refresh_command"
 fi
-info_bold " fibonacci-benchmark --help" 
+info_bold " fibonacci-benchmark --help"
+info_bold " compare-runtimes.sh --help" 

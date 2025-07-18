@@ -10,6 +10,7 @@ $BENCHMARK_URL = "https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-mult
 $CONFIG_URL = "https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/config.json"
 $PACKAGE_URL = "https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/package.json"
 $README_URL = "https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/README.md"
+$COMPARE_URL = "https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/compare-runtimes.ps1"
 
 # Installation directories
 $BIN_DIR = Join-Path $InstallDir "bin"
@@ -74,6 +75,9 @@ try {
     
     # Download README.md
     Invoke-WebRequest -Uri $README_URL -OutFile (Join-Path $BIN_DIR "README.md") -UseBasicParsing
+    
+    # Download compare-runtimes.ps1
+    Invoke-WebRequest -Uri $COMPARE_URL -OutFile (Join-Path $BIN_DIR "compare-runtimes.ps1") -UseBasicParsing
 } catch {
     Write-Error "Failed to download benchmark files: $($_.Exception.Message)"
 }
@@ -155,6 +159,7 @@ $BatchFile = Join-Path $BIN_DIR "fibonacci-benchmark.bat"
 $BatchScript | Out-File -FilePath $BatchFile -Encoding ASCII
 
 Write-Success "Fibonacci Benchmark was installed successfully to $EXE"
+Write-Success "Runtime comparison tool installed to $(Join-Path $BIN_DIR "compare-runtimes.ps1")"
 
 # Add to PATH
 $CurrentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
@@ -170,6 +175,8 @@ if ($CurrentPath -notlike "*$BIN_DIR*") {
 Write-Host ""
 Write-Info "To get started, run:"
 Write-Host "  fibonacci-benchmark --help" -ForegroundColor Green
+Write-Host "  compare-runtimes.ps1 --help" -ForegroundColor Green
 Write-Host ""
-Write-Info "Or use the PowerShell command:"
-Write-Host "  fibonacci-benchmark.ps1 --help" -ForegroundColor Green 
+Write-Info "Or use the PowerShell commands:"
+Write-Host "  fibonacci-benchmark.ps1 --help" -ForegroundColor Green
+Write-Host "  compare-runtimes.ps1 --help" -ForegroundColor Green 

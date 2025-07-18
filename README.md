@@ -155,14 +155,23 @@ Number of runs: 1
 curl -fsSL https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/install.sh | bash
 ```
 
+**Includes:**
+- `fibonacci-benchmark` - Main benchmark tool
+- `compare-runtimes.sh` - Cross-runtime performance comparison tool
+
 #### Windows PowerShell
 ```powershell
 irm https://raw.githubusercontent.com/m3nfis/fiboBenchmark_js-multi-runtime/main/install.ps1 | iex
 ```
 
+**Includes:**
+- `fibonacci-benchmark.ps1` - Main benchmark tool
+- `compare-runtimes.ps1` - Cross-runtime performance comparison tool
+
 After installation, you can run:
 ```bash
 fibonacci-benchmark --help
+compare-runtimes.sh --help
 ```
 
 ### Manual Installation & Usage
