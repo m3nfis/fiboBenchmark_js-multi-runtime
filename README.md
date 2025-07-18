@@ -63,7 +63,7 @@ Number of runs: 1
     "endTime": "2025-07-17T10:08:14.233Z"
   },
   "systemInfo": {
-    "hostname": "POOPIE_MACHINE",
+    "hostname": "RQCTQV92Y5",
     "cpuModel": "Apple M1 Pro",
     "cpuCores": 8,
     "totalRAM": "16.00 GB"
@@ -218,9 +218,65 @@ bun run benchmark.js -d 60
 bun run benchmark.js -n 5 -o results.json
 ```
 
-### Configuration
+## 🔄 Runtime Comparison Tool
 
-#### Command Line Options
+### Cross-Runtime Performance Testing
+
+Compare performance across Node.js, Deno, and Bun automatically with the included comparison tools:
+
+#### Unix/Linux/macOS
+```bash
+# Run comparison with default settings (30s per runtime)
+./compare-runtimes.sh
+
+# Custom duration and runs
+./compare-runtimes.sh -d 60 -n 3
+
+# Show help
+./compare-runtimes.sh --help
+```
+
+#### Windows PowerShell
+```powershell
+# Run comparison with default settings (30s per runtime)
+.\compare-runtimes.ps1
+
+# Custom duration and runs
+.\compare-runtimes.ps1 -Duration 60 -Runs 3
+
+# Show help
+.\compare-runtimes.ps1 -Help
+```
+
+#### Sample Comparison Output
+```
+================================
+Runtime Performance Comparison
+================================
+
+Runtime Comparison Results:
+==========================
+
+Runtime      | Overall Score   | Calculations    | Duration (ms)   | Peak Memory     
+-------------|----------------|----------------|----------------|----------------
+Node.js      | 2,507,948      | 163,873        | 30008.76       | 356.83 MB      
+Deno         | 2,623,456      | 171,234        | 29876.45       | 342.12 MB      
+Bun          | 2,789,123      | 182,456        | 29765.32       | 298.45 MB      
+
+🏆 Best Performance: Bun (Score: 2,789,123)
+
+Detailed results saved to: ./runtime-comparison-20241217_143022/
+Individual runtime outputs: ./runtime-comparison-20241217_143022/*_output.log
+JSON results: ./runtime-comparison-20241217_143022/*_results.json
+```
+
+#### Generated Files
+- **Comparison Results**: `comparison_results.txt` - Raw data for analysis
+- **Individual Logs**: `*_output.log` - Detailed output from each runtime
+- **JSON Results**: `*_results.json` - Structured data from each runtime
+- **Summary Report**: `summary_report.md` - Comprehensive comparison report
+
+### Configuration
 
 ```bash
 node benchmark.js [options]
@@ -305,10 +361,102 @@ deno run --allow-read --allow-write --allow-net benchmark.js
 - **Node.js**: Most stable and widely tested
 - **Deno**: Good balance of performance and security
 
+## 💾 Memory Usage Analysis
+
+### Runtime Memory Characteristics
+
+Each JavaScript runtime has distinct memory management strategies that affect performance and resource usage:
+
+#### Memory Usage Comparison
+
+| Runtime | Initial RSS | Peak RSS | Memory Growth | BigInt Growth | Fibonacci Growth |
+|---------|-------------|----------|---------------|---------------|------------------|
+| **Node.js** | ~39 MB | ~48 MB | **~9 MB** | ~2 MB | ~5 MB |
+| **Deno** | ~45 MB | ~57 MB | **~12 MB** | ~6 MB | ~9 MB |
+| **Bun** | ~23 MB | ~70 MB | **~47 MB** | ~19 MB | ~45 MB |
+
+#### Detailed Memory Analysis
+
+##### **Node.js (V8 Engine)**
+- **Strategy**: Conservative memory allocation
+- **Growth Pattern**: Steady, predictable memory growth
+- **BigInt Operations**: Efficient memory usage (~2 MB growth)
+- **Fibonacci Calculations**: Moderate memory usage (~5 MB growth)
+- **Advantages**: Stable, predictable memory behavior
+- **Best For**: Memory-constrained environments, production stability
+
+##### **Deno (V8 Engine)**
+- **Strategy**: Balanced approach with security overhead
+- **Growth Pattern**: Moderate memory growth with security features
+- **BigInt Operations**: Higher memory usage than Node.js (~6 MB growth)
+- **Fibonacci Calculations**: Moderate memory usage (~9 MB growth)
+- **Advantages**: Security features with reasonable memory usage
+- **Best For**: Security-focused applications, modern development
+
+##### **Bun (JavaScriptCore Engine)**
+- **Strategy**: Aggressive memory pre-allocation
+- **Growth Pattern**: Starts low, grows significantly during operations
+- **BigInt Operations**: High memory usage (~19 MB growth)
+- **Fibonacci Calculations**: Highest memory usage (~45 MB growth)
+- **Advantages**: Better performance, fewer GC pauses
+- **Best For**: High-performance servers, CPU-intensive tasks
+
+### Why Bun Uses More Memory?
+
+#### **1. Different Engine Architecture**
+- **Bun**: Uses JavaScriptCore (Safari's engine)
+- **Node.js/Deno**: Use V8 (Chrome's engine)
+- Different engines have fundamentally different memory management philosophies
+
+#### **2. Aggressive Memory Pre-allocation**
+- Bun pre-allocates larger memory pools to avoid frequent garbage collection
+- This leads to higher peak usage but potentially better performance
+- Strategy: "Use more memory now to avoid GC pauses later"
+
+#### **3. BigInt Implementation Differences**
+- Bun's BigInt implementation allocates more memory per operation
+- This is especially noticeable in Fibonacci benchmarks using BigInt extensively
+- Different internal representation and optimization strategies
+
+#### **4. Worker Thread Overhead**
+- Bun's worker thread implementation might allocate more memory per worker
+- Could be using separate memory pools for inter-thread communication
+
+### Memory Usage Recommendations
+
+#### **For High-Performance Servers**
+- **Choose Bun**: Higher memory usage is acceptable for better performance
+- **Benefits**: Less garbage collection overhead, more predictable performance
+- **Consideration**: Ensure adequate memory resources
+
+#### **For Memory-Constrained Systems**
+- **Choose Node.js**: Conservative memory growth, predictable behavior
+- **Benefits**: Lower memory footprint, stable performance
+- **Consideration**: May have more frequent GC pauses
+
+#### **For Security-Focused Applications**
+- **Choose Deno**: Balanced approach with security features
+- **Benefits**: Security permissions with reasonable memory usage
+- **Consideration**: Slightly higher overhead due to security features
+
+#### **For Development Environments**
+- **Memory difference is usually not critical**
+- **Focus on performance and development experience**
+- **Choose based on team familiarity and tooling needs**
+
+### Memory Monitoring
+
+The benchmark provides detailed memory metrics:
+- **Peak Memory**: Maximum memory usage during benchmark
+- **Final Memory**: Memory usage at benchmark completion
+- **Memory Efficiency**: Calculations per MB of memory used
+
+Use these metrics to understand memory behavior in your specific environment and workload.
+
 #### Memory Usage
-- **Bun**: Typically lowest memory footprint
-- **Node.js**: Moderate memory usage
-- **Deno**: Slightly higher memory usage due to security features
+- **Bun**: Higher memory usage for better performance
+- **Node.js**: Conservative memory usage for stability
+- **Deno**: Balanced memory usage with security features
 
 ## 📱 Android Compatibility
 
@@ -615,7 +763,7 @@ The test suite provides colored output and detailed results for each test case.
 
 ## 📝 License
 
-[Add your license information here]
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 

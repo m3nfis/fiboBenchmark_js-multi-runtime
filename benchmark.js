@@ -479,36 +479,36 @@ if (isMainThread) {
 
             // Create workers for each CPU core
             for (let i = 0; i < systemInfo.cpu.cores; i++) {
-                const worker = new Worker(__filename, {
+    const worker = new Worker(__filename, {
                     workerData: { 
                         workerId: i,
                         totalWorkers: systemInfo.cpu.cores
                     }
-                });
+    });
 
                 // Listen for messages from each worker thread
-                worker.on('message', (data) => {
+    worker.on('message', (data) => {
                     // Update the total Fibonacci index and track the highest number
                     totalFibIndex += data.fibIndex;
                     const currentFibNumber = BigInt(data.lastFibonacciNumber);
                     if (currentFibNumber > maxFibNumber) {
                         maxFibNumber = currentFibNumber;
                     }
-                });
+    });
 
                 // Handle any errors that occur in the worker thread
-                worker.on('error', (err) => {
+    worker.on('error', (err) => {
                     console.error(`Worker ${i} error:`, err);
                     activeWorkers--;
-                });
+    });
 
                 // Handle the worker thread exiting
-                worker.on('exit', (code) => {
+    worker.on('exit', (code) => {
                     activeWorkers--;
-                    if (code !== 0) {
+        if (code !== 0) {
                         console.error(`Worker ${i} stopped with exit code ${code}`);
-                    }
-                });
+        }
+    });
 
                 workers.push(worker);
             }
@@ -533,16 +533,16 @@ if (isMainThread) {
             }, 1000); // Check every second
 
             // Set a timeout to stop the benchmark after the defined duration
-            const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
                 // Terminate all worker threads gracefully
                 workers.forEach(worker => worker.terminate());
                 
                 // Stop memory monitoring
                 clearInterval(memoryCheckInterval);
                 
-                const endTime = process.hrtime.bigint();
-                const durationNs = endTime - startTime;
-                const durationMs = Number(durationNs) / 1_000_000;
+        const endTime = process.hrtime.bigint();
+        const durationNs = endTime - startTime;
+        const durationMs = Number(durationNs) / 1_000_000;
 
                 // Calculate average Fibonacci index per worker
                 const avgFibIndex = totalFibIndex > 0 ? Math.floor(totalFibIndex / systemInfo.cpu.cores) : 0;
@@ -635,14 +635,14 @@ if (isMainThread) {
                 endTime: new Date().toISOString()
             },
             systemInfo: {
-                hostname: systemInfo.hostname,
+            hostname: systemInfo.hostname,
                 ipAddresses: systemInfo.ipAddresses,
-                cpuModel: systemInfo.cpu.model,
-                cpuCores: systemInfo.cpu.cores,
+            cpuModel: systemInfo.cpu.model,
+            cpuCores: systemInfo.cpu.cores,
                 totalRAM: systemInfo.ram
             },
             configuration: {
-                benchmarkDurationMs: BENCHMARK_DURATION_MS,
+            benchmarkDurationMs: BENCHMARK_DURATION_MS,
                 maxRamMB: MAX_RAM_MB,
                 outputFile: finalConfig.outputFile,
                 postUrl: finalConfig.postUrl
